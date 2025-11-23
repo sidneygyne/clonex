@@ -1,11 +1,14 @@
 from rest_framework import generics, permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import action
 from django.contrib.auth.models import User
 from .models import Follow
 from .serializers import FollowSerializer, UserSerializer
 from .models import Post
 from .serializers import PostSerializer
+from .models import Comment
+from .serializers import CommentSerializer
 
 # Endpoints de seguir/deixar de seguir
 class FollowToggleView(APIView):
@@ -66,3 +69,25 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    # Curtidas (Likes)
+    @action(detail=True, methods=["post", "delete"])
+    def like(self, request, pk=None):
+        post = self.get_object()
+        like = Like.objects.filter(user=request.user, post=post)
+        if request.method == "POST" and not like.exists():
+            Like.objects.create(user=request.user, post=post)
+        elif request.method == "DELETE" and like.exists():
+            like.delete()
+        return Response({"likes_count": post.likes.count()})
+
+# Commentários
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+
+    def get_queryset(self):
+        return Comment.objects.filter(post_id=self.kwargs["post_pk"]).order_by("-created_at")
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, post_id=self.kwargs["post_pk"])
