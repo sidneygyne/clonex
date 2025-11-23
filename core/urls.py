@@ -11,5 +11,5 @@ urlpatterns = [
     path("auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # Apps
     path("api/accounts/", include("accounts.urls")),
-    path("api/social/", include("social.urls")),
+    # path("api/social/", include("social.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
