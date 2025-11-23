@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
@@ -52,3 +52,17 @@ class FeedView(APIView):
         posts = Post.objects.filter(author_id__in=following_ids).order_by("-created_at")
         serializer = PostSerializer(posts, many=True)
         return Response(serializer.data)
+    
+# CRUD de Postagens
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    """Permite edição apenas ao autor do post"""
+    def has_object_permission(self, request, view, obj):
+        return request.method in permissions.SAFE_METHODS or obj.author == request.user
+
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all().order_by("-created_at")
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
