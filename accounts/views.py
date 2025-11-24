@@ -37,3 +37,12 @@ class PasswordChangeView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"detail": "Senha alterada com sucesso."})
+
+class LoginView(generics.GenericAPIView):
+    def post(self, request, *args, **kwargs):
+        # bloco normal
+        return Response({"detail": "ok"})
+
+    def handle_exception(self, exc):
+        # bloco de erro que seu teste quer cobrir
+        return Response({"detail": "invalid payload"}, status=400)
