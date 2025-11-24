@@ -25,6 +25,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ("id", "username", "email", "display_name", "avatar", "bio")
+        read_only_fields = ["user"]
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
