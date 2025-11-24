@@ -116,3 +116,8 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Documentação da API do projeto CloneX",
     "VERSION": "1.0.0",
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",   # exemplo para front local
+    "https://seu-front.vercel.app",  # exemplo para produção
+]
