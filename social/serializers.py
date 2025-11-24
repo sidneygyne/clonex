@@ -1,42 +1,54 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
-from .models import Follow, Post, Like, Comment
+from django.contrib.auth.models import User
+from .models import Follow, Post, Comment, Like
 
-User = get_user_model()
 
-class UserSerializer(serializers.ModelSerializer):
+class SimpleUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email']  # ajuste conforme necessário
+        fields = ["id", "username"]
+
+
+class UserSerializer(serializers.ModelSerializer):
+    followers_count = serializers.IntegerField(source="followers.count", read_only=True)
+    following_count = serializers.IntegerField(source="following.count", read_only=True)
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "followers_count", "following_count"]
+
 
 class FollowSerializer(serializers.ModelSerializer):
-    follower = UserSerializer(read_only=True)
-    following = UserSerializer(read_only=True)
+    follower = SimpleUserSerializer(read_only=True)
+    following = SimpleUserSerializer(read_only=True)
 
     class Meta:
         model = Follow
-        fields = ['id', 'follower', 'following', 'created_at']
+        fields = ["id", "follower", "following", "created_at"]
 
-class PostSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
-
-    class Meta:
-        model = Post
-        fields = ['id', 'author', 'content', 'image', 'created_at']
-
-class LikeSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    post = PostSerializer(read_only=True)
-
-    class Meta:
-        model = Like
-        fields = ['id', 'user', 'post', 'created_at']
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
-    post = PostSerializer(read_only=True)
+    author = SimpleUserSerializer(read_only=True)
 
     class Meta:
         model = Comment
-        fields = ['id', 'author', 'post', 'content', 'created_at']
+        fields = ["id", "author", "content", "created_at", "post"]
+        read_only_fields = ["author", "post"]
 
+
+class PostSerializer(serializers.ModelSerializer):
+    author = SimpleUserSerializer(read_only=True)
+    likes_count = serializers.IntegerField(source="likes.count", read_only=True)
+    comments_count = serializers.IntegerField(source="comments.count", read_only=True)
+
+    class Meta:
+        model = Post
+        fields = [
+            "id",
+            "author",
+            "content",
+            "image",
+            "created_at",
+            "likes_count",
+            "comments_count",
+        ]
