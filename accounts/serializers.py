@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import Profile
+from rest_framework.exceptions import ValidationError
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,6 +27,13 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ("id", "username", "email", "display_name", "avatar", "bio")
         read_only_fields = ["user"]
+    
+    def validate_avatar(self, value):
+        if value.size > 2 * 1024 * 1024:  # 2MB
+            raise ValidationError("Imagem muito grande. Limite de 2MB.")
+        if not value.name.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
+            raise ValidationError("Formato inválido. Use JPG, PNG ou WEBP.")
+        return value
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
