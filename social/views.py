@@ -3,13 +3,22 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import action
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+
 from .models import Follow, Post, Comment, Like
-from .serializers import FollowSerializer, UserSerializer, SimpleUserSerializer, PostSerializer, CommentSerializer
+from .serializers import (
+    FollowSerializer, UserSerializer, SimpleUserSerializer,
+    PostSerializer, CommentSerializer
+)
+from .forms import PostForm, CommentForm
 
+# ---------------------------
+# API ENDPOINTS (DRF)
+# ---------------------------
 
-# Endpoints de seguir/deixar de seguir
 class FollowToggleView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -26,7 +35,6 @@ class FollowToggleView(APIView):
         )
 
         if not created:
-            # já existe → desfaz o follow
             follow.delete()
             return Response({"detail": "Unfollow realizado com sucesso."}, status=200)
 
@@ -45,6 +53,7 @@ class FollowersListView(generics.ListAPIView):
                                  .values_list("follower_id", flat=True)
         ).order_by("id")
 
+
 class FollowingListView(generics.ListAPIView):
     serializer_class = SimpleUserSerializer
     pagination_class = None 
@@ -57,8 +66,8 @@ class FollowingListView(generics.ListAPIView):
         ).order_by("id")
 
 
-# Endpoint de Feed
 class FeedView(APIView):
+    """Feed via API (JSON)"""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -68,7 +77,6 @@ class FeedView(APIView):
         return Response(serializer.data)
 
 
-# CRUD de Postagens
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """Permite edição apenas ao autor do post"""
     def has_object_permission(self, request, view, obj):
@@ -83,7 +91,6 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    # Curtidas (Likes)
     @action(detail=True, methods=["post", "delete"])
     def like(self, request, pk=None):
         post = self.get_object()
@@ -95,7 +102,6 @@ class PostViewSet(viewsets.ModelViewSet):
         return Response({"likes_count": post.likes.count()})
 
 
-# Commentários
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
@@ -108,3 +114,46 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, post_id=self.kwargs["post_pk"])
 
 
+# ---------------------------
+# VIEWS HTML (Templates)
+# ---------------------------
+
+@login_required
+def feed(request):
+    """Feed HTML com criação de posts"""
+    if request.method == "POST":
+        form = PostForm(request.POST, request.FILES)
+        if form.is_valid():
+            novo_post = form.save(commit=False)
+            novo_post.author = request.user
+            novo_post.save()
+            return redirect("feed")
+    else:
+        form = PostForm()
+
+    posts = Post.objects.all().order_by("-created_at")
+    paginator = Paginator(posts, 10)  # 10 posts por página
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "feed.html", {"posts": page_obj, "form": form})
+
+
+@login_required
+def comments_view(request, post_id):
+    """Página de comentários de um post"""
+    post = get_object_or_404(Post, id=post_id)
+    comments = Comment.objects.filter(post=post).order_by("-created_at")
+
+    if request.method == "POST":
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            novo_comentario = form.save(commit=False)
+            novo_comentario.post = post
+            novo_comentario.author = request.user
+            novo_comentario.save()
+            return redirect("comments", post_id=post.id)
+    else:
+        form = CommentForm()
+
+    return render(request, "comments.html", {"post": post, "comments": comments, "form": form})

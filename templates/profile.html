@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+  <h1>Meu Perfil</h1>
+
+  <div id="perfilView" class="mb-4">
+    {% if profile.avatar %}
+      <img src="{{ profile.avatar.url }}" alt="Avatar" width="120" height="120" class="rounded-circle mb-2">
+    {% else %}
+      <img src="{% static 'img/default-avatar.png' %}" alt="Avatar padrão" width="120" height="120" class="rounded-circle mb-2">
+    {% endif %}
+
+    <p><strong>Usuário:</strong> {{ profile.user.username }}</p>
+    <p><strong>Nome de exibição:</strong> {{ profile.display_name }}</p>
+    <p><strong>Email:</strong> {{ profile.user.email }}</p>
+    <p><strong>Bio:</strong> {{ profile.bio }}</p>
+
+    <button id="btnEditar" class="btn btn-primary">Editar Perfil</button>
+  </div>
+
+  <div id="perfilEdit" style="display: none;">
+    <form method="post" enctype="multipart/form-data" class="card p-3" style="max-width: 500px;">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-success">Salvar</button>
+      <button type="button" id="btnCancelar" class="btn btn-secondary">Cancelar</button>
+    </form>
+  </div>
+
+  <script>
+    const btnEditar = document.getElementById("btnEditar");
+    const btnCancelar = document.getElementById("btnCancelar");
+    const perfilView = document.getElementById("perfilView");
+    const perfilEdit = document.getElementById("perfilEdit");
+
+    btnEditar.addEventListener("click", () => {
+      perfilView.style.display = "none";
+      perfilEdit.style.display = "block";
+    });
+
+    btnCancelar.addEventListener("click", () => {
+      perfilEdit.style.display = "none";
+      perfilView.style.display = "block";
+    });
+  </script>
+{% endblock %}

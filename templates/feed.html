@@ -1,0 +1,83 @@
+{% extends "base.html" %} {% load static %} {% block content %}
+<h1>Feed de Posts</h1>
+
+<!-- Botão -->
+<button
+  class="btn btn-primary mb-3"
+  data-bs-toggle="modal"
+  data-bs-target="#novoPostModal"
+>
+  Criar Post
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="novoPostModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Novo Post</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
+        </div>
+        <div class="modal-body">{{ form.as_p }}</div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Publicar</button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Lista de posts -->
+{% for post in posts %}
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="d-flex align-items-center mb-2">
+      {% if post.author.profile.avatar %}
+      <img
+        src="{{ post.author.profile.avatar.url }}"
+        width="40"
+        height="40"
+        class="rounded-circle me-2"
+      />
+      {% else %}
+      <img
+        src="{% static 'img/default-avatar.png' %}"
+        width="40"
+        height="40"
+        class="rounded-circle me-2"
+      />
+      {% endif %}
+      <strong>{{ post.author.username }}</strong>
+    </div>
+
+    <p>{{ post.content }}</p>
+    {% if post.image %}
+    <img src="{{ post.image.url }}" class="img-fluid rounded mb-2" />
+    {% endif %}
+
+    <p class="text-muted small">
+      Publicado em {{ post.created_at|date:"d/m/Y H:i" }}
+    </p>
+    <a
+      href="{% url 'comments' post.id %}"
+      class="btn btn-sm btn-outline-secondary"
+      >Comentários</a
+    >
+  </div>
+</div>
+{% empty %}
+<p>Nenhum post encontrado.</p>
+{% endfor %} {% endblock %}

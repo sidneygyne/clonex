@@ -78,7 +78,8 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]  # onde procurar os arquivos
+STATIC_ROOT = BASE_DIR / "staticfiles"    # usado no collectstatic
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
@@ -116,3 +117,6 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Documentação da API do projeto CloneX",
     "VERSION": "1.0.0",
 }
+
+LOGIN_REDIRECT_URL = "/dashboard/"
+LOGOUT_REDIRECT_URL = "/"

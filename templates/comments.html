@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Comentários do Post</h1>
+
+  <div class="post">
+    <h2>{{ post.author.username }}</h2>
+    <p>{{ post.content }}</p>
+    <small>Publicado em {{ post.created_at|date:"d/m/Y H:i" }}</small>
+  </div>
+
+  <hr>
+
+  <h3>Comentários</h3>
+  {% if comments %}
+    <ul>
+      {% for comment in comments %}
+        <li>
+          <strong>{{ comment.author.username }}</strong>: {{ comment.content }}
+          <br>
+          <small>{{ comment.created_at|date:"d/m/Y H:i" }}</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Nenhum comentário ainda.</p>
+  {% endif %}
+
+  <hr>
+
+  <h3>Adicionar comentário</h3>
+  <form method="post">
+    {% csrf_token %}
+    <textarea name="content" rows="3" cols="40" placeholder="Escreva seu comentário..."></textarea><br>
+    <button type="submit">Enviar</button>
+  </form>
+{% endblock %}

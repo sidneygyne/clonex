@@ -7,6 +7,16 @@ from .serializers import (
     RegisterSerializer, ProfileSerializer,
     ProfileUpdateSerializer, PasswordChangeSerializer
 )
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.views import LogoutView
+from .forms import ProfileForm
+
+@login_required
+def dashboard(request):
+    return render(request, "profile.html", {"profile": request.user.profile})
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -46,3 +56,35 @@ class LoginView(generics.GenericAPIView):
     def handle_exception(self, exc):
         # bloco de erro que seu teste quer cobrir
         return Response({"detail": "invalid payload"}, status=400)
+    
+
+@login_required
+def dashboard(request):
+    profile = request.user.profile
+    if request.method == "POST":
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect("dashboard")
+    else:
+        form = ProfileForm(instance=profile)
+    return render(request, "profile.html", {"form": form, "profile": profile})
+
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.forms import UserCreationForm
+
+def register(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()  # cria o usuário
+            return redirect("login")  # redireciona para login
+    else:
+        form = UserCreationForm()
+    return render(request, "register.html", {"form": form})
+
+class CustomLogoutView(LogoutView):
+    next_page = "home"
+    def get(self, request, *args, **kwargs):
+        return self.post(request, *args, **kwargs)
