@@ -124,18 +124,25 @@ from .models import Post, Follow
 
 @login_required
 def feed(request):
-    # pega todos os usuários que o request.user segue
-    following_users = Follow.objects.filter(follower=request.user).values_list("following", flat=True)
+    if request.method == "POST":
+        form = PostForm(request.POST, request.FILES)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            return redirect("feed")
+    else:
+        form = PostForm()
 
-    # filtra posts apenas desses usuários
+    following_users = Follow.objects.filter(follower=request.user).values_list("following", flat=True)
     posts = Post.objects.filter(author__in=following_users).order_by("-created_at")
+    liked_posts = Like.objects.filter(user=request.user).values_list("post_id", flat=True)
 
     return render(request, "feed.html", {
         "posts": posts,
-        "form": PostForm(),  # se você tiver o formulário de novo post
+        "form": form,
+        "liked_posts": liked_posts,
     })
-
-
 
 @login_required
 def comments_view(request, post_id):
@@ -204,11 +211,24 @@ def feed_view(request):
         "liked_posts": liked_posts,
     })
 
-#ver meus posts
+#ver meus posts e criar posts
 @login_required
 def my_posts_view(request):
+    if request.method == "POST":
+        form = PostForm(request.POST, request.FILES)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            return redirect("my-posts")
+    else:
+        form = PostForm()
+
     posts = Post.objects.filter(author=request.user).order_by("-created_at")
+    liked_posts = Like.objects.filter(user=request.user).values_list("post_id", flat=True)
+
     return render(request, "feed.html", {
         "posts": posts,
-        "form": PostForm(),  # se você usa o mesmo form de novo post
+        "form": form,
+        "liked_posts": liked_posts,
     })

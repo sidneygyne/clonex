@@ -31,4 +31,5 @@ urlpatterns = [
     path("follow/html/<int:user_id>/", toggle_follow, name="toggle-follow"),
 
     path("like/<int:post_id>/", toggle_like, name="toggle-like"),
+    
 ]

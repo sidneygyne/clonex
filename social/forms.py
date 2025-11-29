@@ -5,9 +5,14 @@ class PostForm(forms.ModelForm):
     class Meta:
         model = Post
         fields = ["content", "image"]  # campos que podem ser editados
+        labels = {
+            "content": "",
+            "image": "",
+        }
         widgets = {
             "content": forms.Textarea(attrs={
-                "rows": 3,
+                "class": "form-control w-100",
+                "rows": 4,
                 "placeholder": "O que você está pensando?"
             }),
         }
