@@ -7,7 +7,7 @@
 
   {% if user.is_authenticated %}
     <div class="card p-3 mb-3">
-      <p><strong>Olá, {{ user.username }}</strong></p>
+      <p><strong>Olá, {{ user.profile.display_name }}</strong></p>
       <div class="d-flex gap-2">
         <a class="btn btn-primary btn-sm" href="/dashboard/">Ir para o perfil</a>
         <a class="btn btn-secondary btn-sm" href="/feed/">Ver feed</a>

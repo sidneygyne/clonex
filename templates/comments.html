@@ -1,37 +1,40 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-  <h1>Comentários do Post</h1>
+<h2>Post de {{ post.author.username }}</h2>
 
-  <div class="post">
-    <h2>{{ post.author.username }}</h2>
+<div class="card mb-3">
+  <div class="card-body">
     <p>{{ post.content }}</p>
-    <small>Publicado em {{ post.created_at|date:"d/m/Y H:i" }}</small>
+
+    {% if post.image %}
+      <img src="{{ post.image.url }}" class="img-fluid rounded mb-2" />
+    {% endif %}
+
+    <p class="text-muted small">
+      Publicado em {{ post.created_at|date:"d/m/Y H:i" }}
+    </p>
   </div>
+</div>
 
-  <hr>
+<h3>Comentários</h3>
+{% for comment in comments %}
+  <div class="card mb-2">
+    <div class="card-body">
+      <strong>{{ comment.author.username }}</strong>
+      <p>{{ comment.content }}</p>
+      <p class="text-muted small">{{ comment.created_at|date:"d/m/Y H:i" }}</p>
+    </div>
+  </div>
+{% empty %}
+  <p>Nenhum comentário ainda.</p>
+{% endfor %}
 
-  <h3>Comentários</h3>
-  {% if comments %}
-    <ul>
-      {% for comment in comments %}
-        <li>
-          <strong>{{ comment.author.username }}</strong>: {{ comment.content }}
-          <br>
-          <small>{{ comment.created_at|date:"d/m/Y H:i" }}</small>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>Nenhum comentário ainda.</p>
-  {% endif %}
-
-  <hr>
-
-  <h3>Adicionar comentário</h3>
-  <form method="post">
-    {% csrf_token %}
-    <textarea name="content" rows="3" cols="40" placeholder="Escreva seu comentário..."></textarea><br>
-    <button type="submit">Enviar</button>
-  </form>
+<!-- Formulário para novo comentário -->
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-primary">Comentar</button>
+</form>
 {% endblock %}

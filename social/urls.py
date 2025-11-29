@@ -5,6 +5,8 @@ from .views import (
     PostViewSet, FollowToggleView, FollowersListView, FollowingListView,
     FeedView, CommentViewSet, feed, comments_view
 )
+from .views import toggle_follow
+from .views import toggle_like
 
 # API routers
 router = DefaultRouter()
@@ -25,4 +27,8 @@ urlpatterns = [
     # HTML views
     path("feed/", feed, name="feed"),  # HTML template
     path("post/<int:post_id>/comments/", comments_view, name="comments"),
+
+    path("follow/html/<int:user_id>/", toggle_follow, name="toggle-follow"),
+
+    path("like/<int:post_id>/", toggle_like, name="toggle-like"),
 ]

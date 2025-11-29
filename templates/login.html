@@ -9,8 +9,9 @@
     <div class="card p-3 mb-3">
       <p><strong>Olá, {{ user.username }}</strong></p>
       <div class="d-flex gap-2">
-        <a class="btn btn-primary btn-sm" href="/dashboard/">Ir para o perfil</a>
-        <a class="btn btn-secondary btn-sm" href="/feed/">Ver feed</a>
+        <!-- Ir para o perfil do usuário logado -->
+        <a class="btn btn-primary btn-sm" href="{% url 'profile' user.username %}">Ir para o perfil</a>
+        <a class="btn btn-secondary btn-sm" href="{% url 'feed' %}">Ver feed</a>
         <form method="post" action="{% url 'logout' %}" class="d-inline">
           {% csrf_token %}
           <button type="submit" class="btn btn-outline-danger btn-sm">Sair</button>
@@ -20,7 +21,8 @@
   {% else %}
     <div class="card p-3" style="max-width: 420px;">
       <h2 class="h5 mb-3">Entrar</h2>
-      <form method="post" action="{% url 'login' %}?next=/dashboard/">
+      <!-- Remover ?next=/dashboard/, usar feed como fallback -->
+      <form method="post" action="{% url 'login' %}?next={% url 'feed' %}">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="btn btn-primary w-100">Entrar</button>

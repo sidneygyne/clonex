@@ -5,9 +5,10 @@ from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from .views import home
-from accounts.views import dashboard, register
-from social.views import comments_view, feed
+from accounts.views import register, register, profile_view
+from social.views import comments_view, feed, my_posts_view
 from django.contrib.auth import views as auth_views
+
 
 urlpatterns = [
     # Admin
@@ -25,8 +26,12 @@ urlpatterns = [
 
     # Front simples (templates)
     path("", home, name="home"),                # página inicial
-    path("dashboard/", dashboard, name="dashboard"),  # perfil
     path("feed/", feed, name="feed"),       # feed e comentários HTML
+
+    path("my-posts/", my_posts_view, name="my-posts"),
+    
+    # Perfil pelo username
+    path("<str:username>/", profile_view, name="profile"),
 
     # Auth templates
     path("accounts/login/", auth_views.LoginView.as_view(template_name="login.html"), name="login"),
@@ -35,7 +40,11 @@ urlpatterns = [
 
     # Accounts extras
     path("accounts/", include("accounts.urls")),
-     path("comments/<int:post_id>/", comments_view, name="comments"),
+    path("comments/<int:post_id>/", comments_view, name="comments"),
+
+    
+
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

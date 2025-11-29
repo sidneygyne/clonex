@@ -1,27 +1,70 @@
 from rest_framework import generics, permissions
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth.models import User
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.views import LogoutView, LoginView as DjangoLoginView
+from django.urls import reverse
+
 from .models import Profile
 from .serializers import (
     RegisterSerializer, ProfileSerializer,
     ProfileUpdateSerializer, PasswordChangeSerializer
 )
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.views import LogoutView
 from .forms import ProfileForm
+from social.models import Follow
+from social.models import Post
 
+
+# ---------------------------
+# PERFIL HTML
+# ---------------------------
 @login_required
-def dashboard(request):
-    return render(request, "profile.html", {"profile": request.user.profile})
+def profile_view(request, username=None):
+    user_obj = get_object_or_404(User, username=username)
+    profile = user_obj.profile
 
+    is_following = Follow.objects.filter(
+        follower=request.user,
+        following=user_obj
+    ).exists()
+
+    followers = User.objects.filter(following__following=user_obj)
+    following = User.objects.filter(followers__follower=user_obj)
+
+    # ✅ buscar posts do usuário
+    posts = Post.objects.filter(author=user_obj).order_by("-created_at")
+
+    if request.user == user_obj:
+        if request.method == "POST":
+            form = ProfileForm(request.POST, request.FILES, instance=profile)
+            if form.is_valid():
+                form.save()
+                return redirect("profile", username=request.user.username)
+        else:
+            form = ProfileForm(instance=profile)
+    else:
+        form = None
+
+    return render(request, "profile.html", {
+        "profile": profile,
+        "form": form,
+        "is_following": is_following,
+        "followers": followers,
+        "following": following,
+        "posts": posts,   # ✅ enviar posts para o template
+    })
+
+
+# ---------------------------
+# API VIEWS
+# ---------------------------
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
+
 
 class MeProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
@@ -38,6 +81,7 @@ class MeProfileView(generics.RetrieveUpdateAPIView):
         serializer.save()
         return Response(ProfileSerializer(request.user.profile).data)
 
+
 class PasswordChangeView(generics.GenericAPIView):
     serializer_class = PasswordChangeSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -48,43 +92,31 @@ class PasswordChangeView(generics.GenericAPIView):
         serializer.save()
         return Response({"detail": "Senha alterada com sucesso."})
 
-class LoginView(generics.GenericAPIView):
-    def post(self, request, *args, **kwargs):
-        # bloco normal
-        return Response({"detail": "ok"})
+class CustomLoginView(DjangoLoginView):
+    template_name = "login.html"
 
-    def handle_exception(self, exc):
-        # bloco de erro que seu teste quer cobrir
-        return Response({"detail": "invalid payload"}, status=400)
-    
-
-@login_required
-def dashboard(request):
-    profile = request.user.profile
-    if request.method == "POST":
-        form = ProfileForm(request.POST, request.FILES, instance=profile)
-        if form.is_valid():
-            form.save()
-            return redirect("dashboard")
-    else:
-        form = ProfileForm(instance=profile)
-    return render(request, "profile.html", {"form": form, "profile": profile})
+    def get_success_url(self):
+        # Redireciona para o perfil do usuário logado
+        return reverse("profile", kwargs={"username": self.request.user.username})
+        return reverse("profile", kwargs={"username": self.request.user.username})
 
 
-from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm
-
+# ---------------------------
+# REGISTER HTML
+# ---------------------------
 def register(request):
     if request.method == "POST":
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            form.save()  # cria o usuário
-            return redirect("login")  # redireciona para login
+            form.save()
+            return redirect("login")
     else:
         form = UserCreationForm()
     return render(request, "register.html", {"form": form})
 
+
 class CustomLogoutView(LogoutView):
     next_page = "home"
+
     def get(self, request, *args, **kwargs):
         return self.post(request, *args, **kwargs)

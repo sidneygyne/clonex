@@ -2,6 +2,7 @@
 from pathlib import Path
 import os
 from datetime import timedelta
+from django.urls import reverse_lazy
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -118,5 +119,5 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
 }
 
-LOGIN_REDIRECT_URL = "/dashboard/"
+LOGIN_REDIRECT_URL = "/feed/"
 LOGOUT_REDIRECT_URL = "/"

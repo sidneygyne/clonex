@@ -2,46 +2,164 @@
 {% load static %}
 
 {% block content %}
-  <h1>Meu Perfil</h1>
+<h1>Meu Perfil</h1>
 
-  <div id="perfilView" class="mb-4">
-    {% if profile.avatar %}
-      <img src="{{ profile.avatar.url }}" alt="Avatar" width="120" height="120" class="rounded-circle mb-2">
+<!-- Dados do perfil -->
+<div class="mb-4">
+  {% if profile.avatar %}
+    <img src="{{ profile.avatar.url }}" alt="Avatar" width="120" height="120" class="rounded-circle mb-2">
+  {% else %}
+    <img src="{% static 'img/default-avatar.png' %}" alt="Avatar padrão" width="120" height="120" class="rounded-circle mb-2">
+  {% endif %}
+
+  <p><strong>Usuário:</strong> {{ profile.user.username }}</p>
+  <p><strong>Nome de exibição:</strong> {{ profile.display_name }}</p>
+  <p><strong>Email:</strong> {{ profile.user.email }}</p>
+  <p><strong>Bio:</strong> {{ profile.bio }}</p>
+
+  <!-- Botão de seguir/deixar de seguir -->
+  {% if profile.user != request.user %}
+    {% if is_following %}
+      <form method="post" action="{% url 'toggle-follow' profile.user.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Deixar de seguir</button>
+      </form>
     {% else %}
-      <img src="{% static 'img/default-avatar.png' %}" alt="Avatar padrão" width="120" height="120" class="rounded-circle mb-2">
+      <form method="post" action="{% url 'toggle-follow' profile.user.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Seguir</button>
+      </form>
     {% endif %}
+  {% endif %}
 
-    <p><strong>Usuário:</strong> {{ profile.user.username }}</p>
-    <p><strong>Nome de exibição:</strong> {{ profile.display_name }}</p>
-    <p><strong>Email:</strong> {{ profile.user.email }}</p>
-    <p><strong>Bio:</strong> {{ profile.bio }}</p>
+  <!-- Botão que abre o modal -->
+  {% if profile.user == request.user %}
+  <!-- Só aparece se o perfil for do usuário logado -->
+  <button class="btn btn-secondary mt-3" data-bs-toggle="modal" data-bs-target="#editarPerfilModal">
+    Editar Perfil
+  </button>
+  {% endif %}
 
-    <button id="btnEditar" class="btn btn-primary">Editar Perfil</button>
+</div>
+
+<!-- Modal Bootstrap -->
+<div class="modal fade" id="editarPerfilModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Editar Perfil</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          {{ form.as_p }}
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Salvar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      </form>
+    </div>
   </div>
+</div>
 
-  <div id="perfilEdit" style="display: none;">
-    <form method="post" enctype="multipart/form-data" class="card p-3" style="max-width: 500px;">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="btn btn-success">Salvar</button>
-      <button type="button" id="btnCancelar" class="btn btn-secondary">Cancelar</button>
-    </form>
+<!-- Contadores -->
+<div class="mt-4">
+  <p>
+    <strong>Seguidores:</strong> 
+    <a href="#" data-bs-toggle="modal" data-bs-target="#followersModal">
+      {{ followers.count }}
+    </a>
+  </p>
+  <p>
+    <strong>Seguindo:</strong> 
+    <a href="#" data-bs-toggle="modal" data-bs-target="#followingModal">
+      {{ following.count }}
+    </a>
+  </p>
+</div>
+
+<!-- Modal Seguidores -->
+<div class="modal fade" id="followersModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Seguidores</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        {% if followers %}
+          <ul class="list-group">
+            {% for f in followers %}
+              <li class="list-group-item d-flex align-items-center">
+                {% if f.profile.avatar %}
+                  <img src="{{ f.profile.avatar.url }}" alt="Avatar" width="40" height="40" class="rounded-circle me-2">
+                {% else %}
+                  <img src="{% static 'img/default-avatar.png' %}" alt="Avatar padrão" width="40" height="40" class="rounded-circle me-2">
+                {% endif %}
+                <a href="{% url 'profile' f.username %}">{{ f.username }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>Nenhum seguidor ainda.</p>
+        {% endif %}
+      </div>
+    </div>
   </div>
+</div>
 
-  <script>
-    const btnEditar = document.getElementById("btnEditar");
-    const btnCancelar = document.getElementById("btnCancelar");
-    const perfilView = document.getElementById("perfilView");
-    const perfilEdit = document.getElementById("perfilEdit");
+<!-- Modal Seguindo -->
+<div class="modal fade" id="followingModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Seguindo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        {% if following %}
+          <ul class="list-group">
+            {% for f in following %}
+              <li class="list-group-item d-flex align-items-center">
+                {% if f.profile.avatar %}
+                  <img src="{{ f.profile.avatar.url }}" alt="Avatar" width="40" height="40" class="rounded-circle me-2">
+                {% else %}
+                  <img src="{% static 'img/default-avatar.png' %}" alt="Avatar padrão" width="40" height="40" class="rounded-circle me-2">
+                {% endif %}
+                <a href="{% url 'profile' f.username %}">{{ f.username }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>Você ainda não segue ninguém.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
 
-    btnEditar.addEventListener("click", () => {
-      perfilView.style.display = "none";
-      perfilEdit.style.display = "block";
-    });
+<!-- Posts do perfil -->
+<h3>Posts de {{ profile.display_name }}</h3>
 
-    btnCancelar.addEventListener("click", () => {
-      perfilEdit.style.display = "none";
-      perfilView.style.display = "block";
-    });
-  </script>
+{% for post in posts %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <p>{{ post.content }}</p>
+      {% if post.image %}
+        <img src="{{ post.image.url }}" class="img-fluid rounded mb-2" />
+      {% endif %}
+      <p class="text-muted small">
+        Publicado em {{ post.created_at|date:"d/m/Y H:i" }}
+      </p>
+    </div>
+  </div>
+{% empty %}
+  <p>Este usuário ainda não publicou nada.</p>
+{% endfor %}
+
+
+
+
 {% endblock %}
