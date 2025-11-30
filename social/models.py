@@ -27,10 +27,22 @@ class Like(models.Model):
         unique_together = ("user", "post")
 
 class Comment(models.Model):
-    author = models.ForeignKey(User, related_name="comments", on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, related_name="comments", on_delete=models.CASCADE)
+    author = models.ForeignKey(
+        User,
+        related_name="user_comments",   # 🔹 comentários feitos pelo usuário
+        on_delete=models.CASCADE
+    )
+    post = models.ForeignKey(
+        Post,
+        related_name="comments",        # 🔹 comentários do post
+        on_delete=models.CASCADE
+    )
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comentário de {self.author} no post {self.post.id}"
+
 
 class CommentLike(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comment_likes")

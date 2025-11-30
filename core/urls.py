@@ -5,10 +5,9 @@ from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from .views import home
-from accounts.views import register, register, profile_view
+from accounts.views import register, profile_view
 from social.views import comments_view, feed, my_posts_view, toggle_like, toggle_comment_like
 from django.contrib.auth import views as auth_views
-
 
 urlpatterns = [
     # Admin
@@ -26,28 +25,24 @@ urlpatterns = [
 
     # Front simples (templates)
     path("", home, name="home"),                # página inicial
-    path("feed/", feed, name="feed"),       # feed e comentários HTML
-
+    path("feed/", feed, name="feed"),           # feed e comentários HTML
     path("my-posts/", my_posts_view, name="my-posts"),
-    
-    # Perfil pelo username
-    path("<str:username>/", profile_view, name="profile"),
 
     # Auth templates
     path("accounts/login/", auth_views.LoginView.as_view(template_name="login.html"), name="login"),
     path("accounts/logout/", auth_views.LogoutView.as_view(next_page="home"), name="logout"),
     path("accounts/register/", register, name="register"),
-
-    # Accounts extras
     path("accounts/", include("accounts.urls")),
-    path("comments/<int:post_id>/", comments_view, name="comments"),
 
-    # Curtir/Descurtir
-    path("social/like/<int:pk>/", toggle_like, name="toggle-like"),
+    # Comentários
+    path("comments/<int:post_id>/", comments_view, name="comments"),
     path("comments/<int:comment_id>/like/", toggle_comment_like, name="toggle-comment-like"),
 
+    # Curtir/Descurtir posts
+    path("social/like/<int:pk>/", toggle_like, name="toggle-like"),
 
-    
+    # Perfil pelo username (deixar por último para não conflitar)
+    path("<str:username>/", profile_view, name="profile"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

@@ -238,12 +238,11 @@ def comments_view(request, post_id):
                 "author": request.user.username,
                 "content": novo_comentario.content,
                 "created_at": localtime(novo_comentario.created_at).strftime("%d/%m/%Y %H:%M"),
+                "total_comments": post.comments.count(),  # 🔹 contador atualizado
             })
     else:
         comments = Comment.objects.filter(post=post).order_by("-created_at")
         form = CommentForm()
-
-        # lista de comentários curtidos pelo usuário logado
         liked_comments = CommentLike.objects.filter(user=request.user).values_list("comment_id", flat=True)
 
         return render(request, "comments.html", {
@@ -252,6 +251,7 @@ def comments_view(request, post_id):
             "form": form,
             "liked_comments": liked_comments,
         })
+
 
 
 
