@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from .models import Follow, Post, Comment, Like
+from .models import Follow, Post, Comment, Like, CommentLike
 from .serializers import (
     FollowSerializer, UserSerializer, SimpleUserSerializer,
     PostSerializer, CommentSerializer
@@ -148,28 +148,6 @@ def feed(request):
 from django.utils.timezone import localtime
 from django.http import JsonResponse
 
-@login_required
-def comments_view(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-
-    if request.method == "POST":
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            novo_comentario = form.save(commit=False)
-            novo_comentario.post = post
-            novo_comentario.author = request.user
-            novo_comentario.save()
-            return JsonResponse({
-                "author": request.user.username,
-                "content": novo_comentario.content,
-                "created_at": localtime(novo_comentario.created_at).strftime("%d/%m/%Y %H:%M"),
-            })
-    else:
-        comments = Comment.objects.filter(post=post).order_by("-created_at")
-        form = CommentForm()
-        return render(request, "comments.html", {"post": post, "comments": comments, "form": form})
-
-
 
 @login_required
 def toggle_follow(request, user_id):
@@ -242,4 +220,55 @@ def my_posts_view(request):
         "posts": posts,
         "form": form,
         "liked_posts": liked_posts,
+    })
+
+@login_required
+def comments_view(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+
+    if request.method == "POST":
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            novo_comentario = form.save(commit=False)
+            novo_comentario.post = post
+            novo_comentario.author = request.user
+            novo_comentario.save()
+            return JsonResponse({
+                "id": novo_comentario.id,
+                "author": request.user.username,
+                "content": novo_comentario.content,
+                "created_at": localtime(novo_comentario.created_at).strftime("%d/%m/%Y %H:%M"),
+            })
+    else:
+        comments = Comment.objects.filter(post=post).order_by("-created_at")
+        form = CommentForm()
+
+        # lista de comentários curtidos pelo usuário logado
+        liked_comments = CommentLike.objects.filter(user=request.user).values_list("comment_id", flat=True)
+
+        return render(request, "comments.html", {
+            "post": post,
+            "comments": comments,
+            "form": form,
+            "liked_comments": liked_comments,
+        })
+
+
+
+# Curtir/descurtir comentário
+@login_required
+def toggle_comment_like(request, comment_id):
+    comment = get_object_or_404(Comment, pk=comment_id)
+    like = CommentLike.objects.filter(user=request.user, comment=comment)
+
+    if like.exists():
+        like.delete()
+        liked = False
+    else:
+        CommentLike.objects.create(user=request.user, comment=comment)
+        liked = True
+
+    return JsonResponse({
+        "likes_count": comment.likes.count(),
+        "liked": liked
     })

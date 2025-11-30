@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from .views import home
 from accounts.views import register, register, profile_view
-from social.views import comments_view, feed, my_posts_view, toggle_like
+from social.views import comments_view, feed, my_posts_view, toggle_like, toggle_comment_like
 from django.contrib.auth import views as auth_views
 
 
@@ -44,6 +44,8 @@ urlpatterns = [
 
     # Curtir/Descurtir
     path("social/like/<int:pk>/", toggle_like, name="toggle-like"),
+    path("comments/<int:comment_id>/like/", toggle_comment_like, name="toggle-comment-like"),
+
 
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

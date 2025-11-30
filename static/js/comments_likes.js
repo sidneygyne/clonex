@@ -1,22 +1,19 @@
 $(function() {
-  $(document).on("submit", "form.like-form", function(e) {
+  $(document).on("submit", "form.comment-like-form", function(e) {
     e.preventDefault();
 
     const $form = $(this);
     const url = $form.attr("action");
-    const postId = $form.data("post-id");
+    const commentId = $form.data("comment-id");
 
     $.ajax({
       url: url,
       type: "POST",
       data: $form.serialize(),
       success: function(data) {
-        // Atualiza APENAS o número (mantém ícone)
-        if (typeof data.likes_count !== "undefined") {
-          $(`#likes-count-${postId} .like-number`).text(data.likes_count);
-        }
+        // Atualiza só o número, mantém o ícone
+        $(`#comment-likes-count-${commentId} .like-number`).text(data.likes_count);
 
-        // Alterna o botão
         const $btn = $form.find("button");
         if (data.liked) {
           $btn.removeClass("btn-primary").addClass("btn-danger").text("Descurtir");
@@ -25,8 +22,7 @@ $(function() {
         }
       },
       error: function(xhr) {
-        console.error("Erro no like:", xhr.status, xhr.responseText);
-        alert("Não foi possível atualizar a curtida. Tente novamente.");
+        console.error("Erro no like do comentário:", xhr.status, xhr.responseText);
       }
     });
   });

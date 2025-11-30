@@ -58,19 +58,22 @@
 
     <!-- Botão Curtir/Descurtir via AJAX -->
     <form method="post"
-          action="{% url 'toggle-like' post.id %}"
-          class="like-form d-inline"
-          data-post-id="{{ post.id }}">
-      {% csrf_token %}
-      {% if post.id in liked_posts %}
-        <button type="submit" class="btn btn-sm btn-danger">Descurtir</button>
-      {% else %}
-        <button type="submit" class="btn btn-sm btn-primary">Curtir</button>
-      {% endif %}
-    </form>
+      action="{% url 'toggle-like' post.id %}"
+      class="like-form d-inline"
+      data-post-id="{{ post.id }}">
+  {% csrf_token %}
+  {% if post.id in liked_posts %}
+    <button type="submit" class="btn btn-sm btn-danger">Descurtir</button>
+  {% else %}
+    <button type="submit" class="btn btn-sm btn-primary">Curtir</button>
+  {% endif %}
+</form>
 
     <!-- Contador de curtidas -->
-    <span id="likes-count-{{ post.id }}">{{ post.likes.count }} curtidas</span>
+    <span id="likes-count-{{ post.id }}">
+  <span class="like-number">{{ post.likes.count }}</span>
+  <i class="bi bi-hand-thumbs-up-fill text-primary"></i>
+</span>
 
     <!-- Botão Comentários -->
     <a href="{% url 'comments' post.id %}" class="btn btn-sm btn-outline-secondary ms-3">

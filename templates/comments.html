@@ -18,16 +18,17 @@
   </div>
 </div>
 
-
 <!-- Formulário para novo comentário -->
-<form method="post" action="{% url 'comments' post.id %}" 
-      class="comment-form" data-post-id="{{ post.id }}">
+<form method="post"
+      action="{% url 'comments' post.id %}"
+      class="comment-form"
+      data-post-id="{{ post.id }}">
   {% csrf_token %}
   {{ form.as_p }}
   <button type="submit" class="btn btn-primary">Comentar</button>
 </form>
 
-<!-- Comentarios do post -->
+<!-- Comentários do post -->
 <h3>Comentários</h3>
 <div id="comments-list-{{ post.id }}">
   {% for comment in comments %}
@@ -36,11 +37,29 @@
         <strong>{{ comment.author.username }}</strong>
         <p>{{ comment.content }}</p>
         <p class="text-muted small">{{ comment.created_at|date:"d/m/Y H:i" }}</p>
+
+        <!-- Botão Curtir/Descurtir -->
+        <form method="post"
+              action="{% url 'toggle-comment-like' comment.id %}"
+              class="comment-like-form d-inline"
+              data-comment-id="{{ comment.id }}">
+          {% csrf_token %}
+          {% if comment.id in liked_comments %}
+            <button type="submit" class="btn btn-sm btn-danger">Descurtir</button>
+          {% else %}
+            <button type="submit" class="btn btn-sm btn-primary">Curtir</button>
+          {% endif %}
+        </form>
+
+        <!-- Contador com ícone -->
+        <span id="comment-likes-count-{{ comment.id }}">
+          <span class="like-number">{{ comment.likes.count }}</span>
+          <i class="bi bi-hand-thumbs-up-fill text-primary"></i>
+        </span>
       </div>
     </div>
   {% empty %}
     <p>Nenhum comentário ainda.</p>
   {% endfor %}
 </div>
-
 {% endblock %}
