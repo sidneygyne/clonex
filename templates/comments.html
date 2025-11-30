@@ -18,23 +18,29 @@
   </div>
 </div>
 
-<h3>Comentários</h3>
-{% for comment in comments %}
-  <div class="card mb-2">
-    <div class="card-body">
-      <strong>{{ comment.author.username }}</strong>
-      <p>{{ comment.content }}</p>
-      <p class="text-muted small">{{ comment.created_at|date:"d/m/Y H:i" }}</p>
-    </div>
-  </div>
-{% empty %}
-  <p>Nenhum comentário ainda.</p>
-{% endfor %}
 
 <!-- Formulário para novo comentário -->
-<form method="post">
+<form method="post" action="{% url 'comments' post.id %}" 
+      class="comment-form" data-post-id="{{ post.id }}">
   {% csrf_token %}
   {{ form.as_p }}
   <button type="submit" class="btn btn-primary">Comentar</button>
 </form>
+
+<!-- Comentarios do post -->
+<h3>Comentários</h3>
+<div id="comments-list-{{ post.id }}">
+  {% for comment in comments %}
+    <div class="card mb-2">
+      <div class="card-body">
+        <strong>{{ comment.author.username }}</strong>
+        <p>{{ comment.content }}</p>
+        <p class="text-muted small">{{ comment.created_at|date:"d/m/Y H:i" }}</p>
+      </div>
+    </div>
+  {% empty %}
+    <p>Nenhum comentário ainda.</p>
+  {% endfor %}
+</div>
+
 {% endblock %}

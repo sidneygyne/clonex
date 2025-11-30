@@ -7,15 +7,10 @@
 <div class="mb-3">
   <a href="{% url 'feed' %}" class="btn btn-outline-primary btn-sm">Feed (seguindo)</a>
   <a href="{% url 'my-posts' %}" class="btn btn-outline-secondary btn-sm">Meus Posts</a>
-
 </div>
 
 <!-- Botão -->
-<button
-  class="btn btn-primary mb-3"
-  data-bs-toggle="modal"
-  data-bs-target="#novoPostModal"
->
+<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#novoPostModal">
   Criar Post
 </button>
 
@@ -32,9 +27,7 @@
         <div class="modal-body w-100 h-100">{{ form.as_p }}</div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-success">Publicar</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-            Cancelar
-          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         </div>
       </form>
     </div>
@@ -63,51 +56,21 @@
       Publicado em {{ post.created_at|date:"d/m/Y H:i" }}
     </p>
 
-    <!-- Botão Curtir -->
-<form method="post" action="{% url 'toggle-like' post.id %}" class="d-inline">
-  {% csrf_token %}
-  {% if post.id in liked_posts %}
-    <button type="submit" class="btn btn-sm btn-danger">Descurtir</button>
-  {% else %}
-    <button type="submit" class="btn btn-sm btn-primary">Curtir</button>
-  {% endif %}
-</form>
+    <!-- Botão Curtir/Descurtir via AJAX -->
+    <form method="post"
+          action="{% url 'toggle-like' post.id %}"
+          class="like-form d-inline"
+          data-post-id="{{ post.id }}">
+      {% csrf_token %}
+      {% if post.id in liked_posts %}
+        <button type="submit" class="btn btn-sm btn-danger">Descurtir</button>
+      {% else %}
+        <button type="submit" class="btn btn-sm btn-primary">Curtir</button>
+      {% endif %}
+    </form>
 
-<!-- Contador de curtidas -->
-<a href="#" data-bs-toggle="modal" data-bs-target="#likesModal{{ post.id }}">
-  {{ post.likes.count }} curtidas
-</a>
-
-<!-- Modal Curtidas -->
-<div class="modal fade" id="likesModal{{ post.id }}" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Curtidas</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        {% if post.likes.all %}
-          <ul class="list-group">
-            {% for like in post.likes.all %}
-              <li class="list-group-item d-flex align-items-center">
-                {% if like.user.profile.avatar %}
-                  <img src="{{ like.user.profile.avatar.url }}" width="40" height="40" class="rounded-circle me-2">
-                {% else %}
-                  <img src="{% static 'img/default-avatar.png' %}" width="40" height="40" class="rounded-circle me-2">
-                {% endif %}
-                <a href="{% url 'profile' like.user.username %}">{{ like.user.username }}</a>
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p>Ninguém curtiu ainda.</p>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</div>
-
+    <!-- Contador de curtidas -->
+    <span id="likes-count-{{ post.id }}">{{ post.likes.count }} curtidas</span>
 
     <!-- Botão Comentários -->
     <a href="{% url 'comments' post.id %}" class="btn btn-sm btn-outline-secondary ms-3">
@@ -118,6 +81,5 @@
 {% empty %}
 <p>Nenhum post encontrado.</p>
 {% endfor %}
+
 {% endblock %}
-
-

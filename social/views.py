@@ -7,13 +7,14 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-
 from .models import Follow, Post, Comment, Like
 from .serializers import (
     FollowSerializer, UserSerializer, SimpleUserSerializer,
     PostSerializer, CommentSerializer
 )
 from .forms import PostForm, CommentForm
+from django.http import JsonResponse
+
 
 # ---------------------------
 # API ENDPOINTS (DRF)
@@ -144,11 +145,12 @@ def feed(request):
         "liked_posts": liked_posts,
     })
 
+from django.utils.timezone import localtime
+from django.http import JsonResponse
+
 @login_required
 def comments_view(request, post_id):
-    """Página de comentários de um post"""
     post = get_object_or_404(Post, id=post_id)
-    comments = Comment.objects.filter(post=post).order_by("-created_at")
 
     if request.method == "POST":
         form = CommentForm(request.POST)
@@ -157,11 +159,16 @@ def comments_view(request, post_id):
             novo_comentario.post = post
             novo_comentario.author = request.user
             novo_comentario.save()
-            return redirect("comments", post_id=post.id)
+            return JsonResponse({
+                "author": request.user.username,
+                "content": novo_comentario.content,
+                "created_at": localtime(novo_comentario.created_at).strftime("%d/%m/%Y %H:%M"),
+            })
     else:
+        comments = Comment.objects.filter(post=post).order_by("-created_at")
         form = CommentForm()
+        return render(request, "comments.html", {"post": post, "comments": comments, "form": form})
 
-    return render(request, "comments.html", {"post": post, "comments": comments, "form": form})
 
 
 @login_required
@@ -187,18 +194,22 @@ def toggle_follow(request, user_id):
 
 #Curtir e descurtir um post
 @login_required
-def toggle_like(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-    like, created = Like.objects.get_or_create(user=request.user, post=post)
+def toggle_like(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    like = Like.objects.filter(user=request.user, post=post)
 
-    if not created:
-        # já tinha curtido → remove a curtida
+    if like.exists():
         like.delete()
+        liked = False
+    else:
+        Like.objects.create(user=request.user, post=post)
+        liked = True
 
-    return redirect("feed")  # volta para o feed
+    return JsonResponse({
+        "likes_count": post.likes.count(),
+        "liked": liked
+    })
 
-
-from .models import Post, Like
 
 # lista com os IDs dos posts que o usuário já curtiu
 @login_required
