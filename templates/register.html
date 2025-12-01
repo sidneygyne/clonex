@@ -1,23 +1,86 @@
 {% extends "base.html" %}
 {% block content %}
-  <h1>Registrar nova conta</h1>
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
 
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">Registrar nova conta</h4>
+        </div>
+        <div class="card-body">
+          <form method="post" novalidate>
+            {% csrf_token %}
 
-    {% if form.errors %}
-      <div class="errors">
-        <ul>
-          {% for field, errors in form.errors.items %}
-            {% for error in errors %}
-              <li><strong>{{ field }}:</strong> {{ error }}</li>
-            {% endfor %}
-          {% endfor %}
-        </ul>
+            <!-- Usuário -->
+            <div class="mb-3 row">
+              <label for="{{ form.username.id_for_label }}" class="col-sm-3 col-form-label">Usuário</label>
+              <div class="col-sm-9">
+                {{ form.username }}
+                {% for error in form.username.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Senha -->
+            <div class="mb-3 row">
+              <label for="{{ form.password1.id_for_label }}" class="col-sm-3 col-form-label">Senha</label>
+              <div class="col-sm-9">
+                {{ form.password1 }}
+                {% for error in form.password1.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Confirmação de senha -->
+            <div class="mb-3 row">
+              <label for="{{ form.password2.id_for_label }}" class="col-sm-3 col-form-label">Confirmação</label>
+              <div class="col-sm-9">
+                {{ form.password2 }}
+                {% for error in form.password2.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Erros gerais -->
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                  <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <!-- Botão -->
+            <div class="d-grid mt-4">
+              <button type="submit" class="btn btn-primary btn-lg">Registrar</button>
+            </div>
+          </form>
+        </div>
       </div>
-    {% endif %}
 
-    <button type="submit">Registrar</button>
-  </form>
+    </div>
+  </div>
+
+  <!-- Modal de sucesso -->
+<div class="modal fade" id="successModal"
+     data-show="{{ show_modal|yesno:'true,false' }}"
+     data-redirect="{% url 'home' %}"
+     tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="successModalLabel">Conta criada com sucesso!</h5>
+      </div>
+      <div class="modal-body">
+        Bem-vindo! Você será redirecionado para a página inicial.
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
 {% endblock %}
