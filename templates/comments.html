@@ -1,0 +1,76 @@
+{% extends "base.html" %} {% load static %} {% block content %}
+<h2>Post de {{ post.author.username }}</h2>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <p>{{ post.content }}</p>
+
+    {% if post.image %}
+    <img src="{{ post.image.url }}" class="img-fluid rounded mb-2" />
+    {% endif %}
+
+    <p class="text-muted small">
+      Publicado em {{ post.created_at|date:"d/m/Y H:i" }}
+    </p>
+
+    <!-- <p id="comments-count-{{ post.id }}">
+  {% if post.comments.count == 0 %}
+    Nenhum comentário
+  {% elif post.comments.count == 1 %}
+    1 comentário
+  {% else %}
+    {{ post.comments.count }} comentários
+  {% endif %}
+</p> -->
+
+    
+  </div>
+</div>
+
+<!-- Formulário para novo comentário -->
+<form
+  method="post"
+  action="{% url 'comments' post.id %}"
+  class="comment-form"
+  data-post-id="{{ post.id }}"
+>
+  {% csrf_token %} {{ form.as_p }}
+  <button type="submit" class="btn btn-primary">Comentar</button>
+</form>
+
+<!-- Comentários do post -->
+<h3>Comentários</h3>
+<div id="comments-list-{{ post.id }}">
+  {% for comment in comments %}
+  <div class="card mb-2">
+    <div class="card-body">
+      <strong>{{ comment.author.username }}</strong>
+      <p>{{ comment.content }}</p>
+      <p class="text-muted small">{{ comment.created_at|date:"d/m/Y H:i" }}</p>
+
+      <!-- Botão Curtir/Descurtir -->
+      <form
+        method="post"
+        action="{% url 'toggle-comment-like' comment.id %}"
+        class="comment-like-form d-inline"
+        data-comment-id="{{ comment.id }}"
+      >
+        {% csrf_token %} {% if comment.id in liked_comments %}
+        <button type="submit" class="btn btn-sm btn-danger">Descurtir</button>
+        {% else %}
+        <button type="submit" class="btn btn-sm btn-primary">Curtir</button>
+        {% endif %}
+      </form>
+
+      <!-- Contador com ícone -->
+      <span id="comment-likes-count-{{ comment.id }}">
+        <span class="like-number">{{ comment.likes.count }}</span>
+        <i class="bi bi-hand-thumbs-up-fill text-primary"></i>
+      </span>
+    </div>
+  </div>
+  {% empty %}
+  <p>Nenhum comentário ainda.</p>
+  {% endfor %}
+</div>
+{% endblock %}
