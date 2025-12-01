@@ -15,6 +15,7 @@ from .serializers import (
 from .forms import ProfileForm
 from social.models import Follow
 from social.models import Post
+from .forms import CustomUserCreationForm
 
 
 # ---------------------------
@@ -106,17 +107,14 @@ class CustomLoginView(DjangoLoginView):
 # ---------------------------
 def register(request):
     if request.method == "POST":
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect("login")
+            user = form.save()
+            return render(request, "register.html", {
+                "form": CustomUserCreationForm(),
+                "show_modal": True,
+                "username": user.username
+            })
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     return render(request, "register.html", {"form": form})
-
-
-class CustomLogoutView(LogoutView):
-    next_page = "home"
-
-    def get(self, request, *args, **kwargs):
-        return self.post(request, *args, **kwargs)
