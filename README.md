@@ -36,9 +36,9 @@ Clonex é uma aplicação web desenvolvida com **Python/Django** que implementa 
 ---
 
 ## 📦 Instalação e uso
+---
 
 ### 1. Clone o repositório
-```bash
 git clone https://github.com/sidneygyne/clonex.git
 cd clonex
 
