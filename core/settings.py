@@ -122,3 +122,5 @@ LOGOUT_REDIRECT_URL = "/"
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1',
 'sidneygyne.pythonanywhere.com']
+
+CORS_ALLOW_ALL_ORIGINS = True
